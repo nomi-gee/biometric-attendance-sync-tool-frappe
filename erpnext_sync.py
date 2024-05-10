@@ -176,16 +176,15 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
             # if everything goes well then this file is removed automatically at the end.
             dump_file_name = get_dump_file_name_and_directory(device_id, ip)
             with open(dump_file_name, 'w+') as f:
-                f.write(json.dumps(list(map(lambda x: x.__dict__, attendances)), default=datetime.datetime.timestamp))
-        
-        info_logger.info("\t".join((ip, "Device Enable Attempted. Result:", str(x))))
+                f.write(json.dumps(list(map(lambda x: x, attendances)), default=datetime.datetime.timestamp))
+
     except:
         error_logger.exception(str(ip)+' exception when fetching from device...')
         raise Exception('Device fetch failed.')
     finally:
         if conn:
             conn.disconnect()
-    return list(map(lambda x: x.__dict__, attendances))
+    return list(map(lambda x: x, attendances))
 
 
 def send_to_erpnext(employee_field_value, timestamp, device_id=None, log_type=None):
