@@ -45,7 +45,7 @@ def main():
     print("___Running___")
     try:
         last_lift_off_timestamp = _safe_convert_date(status.get('lift_off_timestamp'), "%Y-%m-%d %H:%M:%S.%f")
-        if (last_lift_off_timestamp and last_lift_off_timestamp < datetime.datetime.now() - datetime.timedelta(minutes=config.PULL_FREQUENCY)) or not last_lift_off_timestamp:
+        if (last_lift_off_timestamp and last_lift_off_timestamp < datetime.datetime.now() - datetime.timedelta(seconds=config.PULL_FREQUENCY)) or not last_lift_off_timestamp:
             status.set('lift_off_timestamp', str(datetime.datetime.now()))
             info_logger.info("Cleared for lift off!")
             for device in config.devices:
@@ -147,12 +147,14 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
     attendances = []
     def get_attendances(link, attendances):
         if link:
+            print(link)
             data = {}
             headers = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Token {0}'.format(config.BIOTIME_TOKEN)
             }
-            att = request.post(link, headers=headers, json=data)
+            att = requests.post(link, headers=headers, json=data)
+            print(att.status_code)
             if att.status_code == 200:
                 resp = att.json()
                 attendances += resp["data"]
