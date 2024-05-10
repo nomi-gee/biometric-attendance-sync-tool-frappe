@@ -163,6 +163,7 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
     try:
         attendances = []
         get_attendances(config.BIOTIME_LINK, attendances)
+        print(attendances)
         # conn = zk.connect()
         # x = conn.disable_device()
         # # device is disabled when fetching data
