@@ -147,41 +147,37 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
     attendances = []
     def get_attendances(link, attendances):
         if link:
-            print(link)
-            data = {}
+            data = {
+                "terminal_sn": device_id
+            }
             headers = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Token {0}'.format(config.BIOTIME_TOKEN)
             }
             att = requests.get(link, headers=headers, json=data)
-            print(att.status_code)
             if att.status_code == 200:
                 resp = att.json()
                 attendances += resp["data"]
                 if resp["next"]:
                     get_attendances(resp["next"], attendances)
     try:
+        attendance_list = []
+        get_attendances(config.BIOTIME_LINK, attendance_list)
         attendances = []
-        get_attendances(config.BIOTIME_LINK, attendances)
-        print(attendances)
-        # conn = zk.connect()
-        # x = conn.disable_device()
-        # # device is disabled when fetching data
-        # info_logger.info("\t".join((ip, "Device Disable Attempted. Result:", str(x))))
-        # attendances = conn.get_attendance()
-        # info_logger.info("\t".join((ip, "Attendances Fetched:", str(len(attendances)))))
-        # status.set(f'{device_id}_push_timestamp', None)
-        # status.set(f'{device_id}_pull_timestamp', str(datetime.datetime.now()))
-        # if len(attendances):
-        #     # keeping a backup before clearing data incase the programs fails.
-        #     # if everything goes well then this file is removed automatically at the end.
-        #     dump_file_name = get_dump_file_name_and_directory(device_id, ip)
-        #     with open(dump_file_name, 'w+') as f:
-        #         f.write(json.dumps(list(map(lambda x: x.__dict__, attendances)), default=datetime.datetime.timestamp))
-        #     if clear_from_device_on_fetch:
-        #         x = conn.clear_attendance()
-        #         info_logger.info("\t".join((ip, "Attendance Clear Attempted. Result:", str(x))))
-        # x = conn.enable_device()
+        for d in attendance_list:
+            dt_obj = datetime.datetime.strptime(d["punch_time"], "%Y-%m-%d %H:%M:%S")
+            attendances.append({"uid": d["id"], "user_id": d["emp"], "timestamp": dt_obj.timestamp(), "status": 15, "punch": d["punch_state"]})
+        
+        info_logger.info("\t".join((ip, "Attendances Fetched:", str(len(attendances)))))
+        status.set(f'{device_id}_push_timestamp', None)
+        status.set(f'{device_id}_pull_timestamp', str(datetime.datetime.now()))
+        if len(attendances):
+            # keeping a backup before clearing data incase the programs fails.
+            # if everything goes well then this file is removed automatically at the end.
+            dump_file_name = get_dump_file_name_and_directory(device_id, ip)
+            with open(dump_file_name, 'w+') as f:
+                f.write(json.dumps(list(map(lambda x: x.__dict__, attendances)), default=datetime.datetime.timestamp))
+        
         info_logger.info("\t".join((ip, "Device Enable Attempted. Result:", str(x))))
     except:
         error_logger.exception(str(ip)+' exception when fetching from device...')
