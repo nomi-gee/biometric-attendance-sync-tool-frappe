@@ -153,7 +153,7 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
                 'Content-Type': 'application/json',
                 'Authorization': 'Token {0}'.format(config.BIOTIME_TOKEN)
             }
-            att = requests.post(link, headers=headers, json=data)
+            att = requests.get(link, headers=headers, json=data)
             print(att.status_code)
             if att.status_code == 200:
                 resp = att.json()
