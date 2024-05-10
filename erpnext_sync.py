@@ -9,7 +9,6 @@ import time
 import logging
 from logging.handlers import RotatingFileHandler
 import pickledb
-from zk import ZK, const
 
 EMPLOYEE_NOT_FOUND_ERROR_MESSAGE = "No Employee found for the given employee field value"
 EMPLOYEE_INACTIVE_ERROR_MESSAGE = "Transactions cannot be created for an Inactive Employee"
@@ -43,6 +42,7 @@ def main():
     then calling the relevent functions to pull data and push to EPRNext.
 
     """
+    print("___Running___")
     try:
         last_lift_off_timestamp = _safe_convert_date(status.get('lift_off_timestamp'), "%Y-%m-%d %H:%M:%S.%f")
         if (last_lift_off_timestamp and last_lift_off_timestamp < datetime.datetime.now() - datetime.timedelta(minutes=config.PULL_FREQUENCY)) or not last_lift_off_timestamp:
@@ -142,28 +142,43 @@ def pull_process_and_push_data(device, device_attendance_logs=None):
 
 def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, clear_from_device_on_fetch=False):
     #  Sample Attendance Logs [{'punch': 255, 'user_id': '22', 'uid': 12349, 'status': 1, 'timestamp': datetime.datetime(2019, 2, 26, 20, 31, 29)},{'punch': 255, 'user_id': '7', 'uid': 7, 'status': 1, 'timestamp': datetime.datetime(2019, 2, 26, 20, 31, 36)}]
-    zk = ZK(ip, port=port, timeout=timeout)
+    
     conn = None
     attendances = []
+    def get_attendances(link, attendances):
+        if link:
+            data = {}
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Token {0}'.format(config.BIOTIME_TOKEN)
+            }
+            att = request.post(link, headers=headers, json=data)
+            if att.status_code == 200:
+                resp = att.json()
+                attendances += resp["data"]
+                if resp["next"]:
+                    get_attendances(resp["next"], attendances)
     try:
-        conn = zk.connect()
-        x = conn.disable_device()
-        # device is disabled when fetching data
-        info_logger.info("\t".join((ip, "Device Disable Attempted. Result:", str(x))))
-        attendances = conn.get_attendance()
-        info_logger.info("\t".join((ip, "Attendances Fetched:", str(len(attendances)))))
-        status.set(f'{device_id}_push_timestamp', None)
-        status.set(f'{device_id}_pull_timestamp', str(datetime.datetime.now()))
-        if len(attendances):
-            # keeping a backup before clearing data incase the programs fails.
-            # if everything goes well then this file is removed automatically at the end.
-            dump_file_name = get_dump_file_name_and_directory(device_id, ip)
-            with open(dump_file_name, 'w+') as f:
-                f.write(json.dumps(list(map(lambda x: x.__dict__, attendances)), default=datetime.datetime.timestamp))
-            if clear_from_device_on_fetch:
-                x = conn.clear_attendance()
-                info_logger.info("\t".join((ip, "Attendance Clear Attempted. Result:", str(x))))
-        x = conn.enable_device()
+        attendances = []
+        get_attendances(config.BIOTIME_LINK, attendances)
+        # conn = zk.connect()
+        # x = conn.disable_device()
+        # # device is disabled when fetching data
+        # info_logger.info("\t".join((ip, "Device Disable Attempted. Result:", str(x))))
+        # attendances = conn.get_attendance()
+        # info_logger.info("\t".join((ip, "Attendances Fetched:", str(len(attendances)))))
+        # status.set(f'{device_id}_push_timestamp', None)
+        # status.set(f'{device_id}_pull_timestamp', str(datetime.datetime.now()))
+        # if len(attendances):
+        #     # keeping a backup before clearing data incase the programs fails.
+        #     # if everything goes well then this file is removed automatically at the end.
+        #     dump_file_name = get_dump_file_name_and_directory(device_id, ip)
+        #     with open(dump_file_name, 'w+') as f:
+        #         f.write(json.dumps(list(map(lambda x: x.__dict__, attendances)), default=datetime.datetime.timestamp))
+        #     if clear_from_device_on_fetch:
+        #         x = conn.clear_attendance()
+        #         info_logger.info("\t".join((ip, "Attendance Clear Attempted. Result:", str(x))))
+        # x = conn.enable_device()
         info_logger.info("\t".join((ip, "Device Enable Attempted. Result:", str(x))))
     except:
         error_logger.exception(str(ip)+' exception when fetching from device...')
@@ -319,14 +334,15 @@ error_logger = setup_logger('error_logger', '/'.join([config.LOGS_DIRECTORY, 'er
 info_logger = setup_logger('info_logger', '/'.join([config.LOGS_DIRECTORY, 'logs.log']))
 status = pickledb.load('/'.join([config.LOGS_DIRECTORY, 'status.json']), True)
 
-def infinite_loop(sleep_time=15):
-    print("Service Running...")
-    while True:
-        try:
-            main()
-            time.sleep(sleep_time)
-        except BaseException as e:
-            print(e)
+# def infinite_loop(sleep_time=15):
+#     print("Service Running...")
+#     while True:
+#         try:
+#             main()
+#             time.sleep(sleep_time)
+#         except BaseException as e:
+#             print(e)
 
-if __name__ == "__main__":
-    infinite_loop()
+# if __name__ == "__main__":
+#     infinite_loop()
+main()
