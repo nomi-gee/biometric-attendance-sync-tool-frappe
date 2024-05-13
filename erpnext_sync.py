@@ -166,7 +166,7 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
         attendances = []
         for d in attendance_list:
             dt_obj = datetime.datetime.strptime(d["punch_time"], "%Y-%m-%d %H:%M:%S")
-            attendances.append({"uid": d["id"], "user_id": d["emp_code"], "timestamp": dt_obj.timestamp(), "status": 15, "punch": d["punch_state"]})
+            attendances.append({"uid": d["id"], "user_id": d["emp_code"], "timestamp": dt_obj, "status": 15, "punch": d["punch_state"]})
         
         info_logger.info("\t".join((ip, "Attendances Fetched:", str(len(attendances)))))
         status.set(f'{device_id}_push_timestamp', None)
