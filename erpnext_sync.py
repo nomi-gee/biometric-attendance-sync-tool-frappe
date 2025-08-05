@@ -167,8 +167,7 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
                 "terminal_sn": device_id
             }
             headers = {
-                'Content-Type': 'application/json',
-                'Authorization': 'Token {0}'.format(config.BIOTIME_TOKEN)
+                'Authorization': 'Bearer {0}'.format(config.BIOTIME_TOKEN)
             }
             att = requests.get(link, headers=headers, params=data)
             if att.status_code == 200:
