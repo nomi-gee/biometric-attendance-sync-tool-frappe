@@ -52,7 +52,7 @@ def main():
         headers = {
             'Content-Type': 'application/json'
         }
-        t = requests.get(link, headers=headers, params=data)
+        t = requests.get("{0}/jwt-api-token-auth/".format(config.BIOTIME_LINK), headers=headers, params=data)
         if t.status_code == 200:
             r = att.json()
             config.BIOTIME_TOKEN = r["token"]
@@ -178,7 +178,7 @@ def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, cl
                     get_attendances(resp["next"], attendances)
     try:
         attendance_list = []
-        get_attendances(config.BIOTIME_LINK, attendance_list)
+        get_attendances("{0}/iclock/api/transactions/".format(config.BIOTIME_LINK), attendance_list)
         attendances = []
         for d in attendance_list:
             dt_obj = datetime.datetime.strptime(d["punch_time"], "%Y-%m-%d %H:%M:%S")
