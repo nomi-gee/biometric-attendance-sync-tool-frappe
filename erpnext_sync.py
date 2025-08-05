@@ -52,9 +52,9 @@ def main():
         headers = {
             'Content-Type': 'application/json'
         }
-        t = requests.post("{0}/jwt-api-token-auth/".format(config.BIOTIME_LINK), headers=headers, params=data)
+        t = requests.post("{0}/jwt-api-token-auth/".format(config.BIOTIME_LINK), headers=headers, json=data)
         if t.status_code == 200:
-            r = att.json()
+            r = t.json()
             config.BIOTIME_TOKEN = r["token"]
     except Exception as e:
         error_logger.exception('exception has occurred in the get token')
