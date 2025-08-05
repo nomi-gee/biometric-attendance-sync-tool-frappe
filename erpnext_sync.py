@@ -52,7 +52,7 @@ def main():
         headers = {
             'Content-Type': 'application/json'
         }
-        t = requests.get("{0}/jwt-api-token-auth/".format(config.BIOTIME_LINK), headers=headers, params=data)
+        t = requests.post("{0}/jwt-api-token-auth/".format(config.BIOTIME_LINK), headers=headers, params=data)
         if t.status_code == 200:
             r = att.json()
             config.BIOTIME_TOKEN = r["token"]
