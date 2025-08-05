@@ -6,6 +6,9 @@ ERPNEXT_URL = 'http://dev.local:8000'
 ERPNEXT_VERSION = 13
 BIOTIME_LINK = 'http://127.0.0.1:80'
 BIOTIME_TOKEN = ''
+BIOTIME_USERNAME = ''
+BIOTIME_PASSWORD = ''
+ERPNEXT_FUNCTION = ''
 
 
 # operational configs

@@ -43,6 +43,22 @@ def main():
 
     """
     print("___Running___")
+
+    try:
+        data = {
+            "username": config.BIOTIME_USERNAME,
+            "password": config.BIOTIME_PASSWORD
+        }
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        t = requests.get(link, headers=headers, params=data)
+        if t.status_code == 200:
+            r = att.json()
+            config.BIOTIME_TOKEN = r["token"]
+    except Exception as e:
+        error_logger.exception('exception has occurred in the get token')
+
     try:
         last_lift_off_timestamp = _safe_convert_date(status.get('lift_off_timestamp'), "%Y-%m-%d %H:%M:%S.%f")
         if (last_lift_off_timestamp and last_lift_off_timestamp < datetime.datetime.now() - datetime.timedelta(seconds=config.PULL_FREQUENCY)) or not last_lift_off_timestamp:
@@ -192,7 +208,7 @@ def send_to_erpnext(employee_field_value, timestamp, device_id=None, log_type=No
     Example: send_to_erpnext('12349',datetime.datetime.now(),'HO1','IN')
     """
     endpoint_app = "hrms" if ERPNEXT_VERSION > 13 else "erpnext"
-    url = f"{config.ERPNEXT_URL}/api/method/{endpoint_app}.hr.doctype.employee_checkin.employee_checkin.add_log_based_on_employee_field"
+    url = f"{config.ERPNEXT_URL}/api/method/{config.ERPNEXT_FUNCTION}"
     headers = {
         'Authorization': "token "+ config.ERPNEXT_API_KEY + ":" + config.ERPNEXT_API_SECRET,
         'Accept': 'application/json'
